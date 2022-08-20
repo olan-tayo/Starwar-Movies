@@ -9,30 +9,54 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import moment from 'moment'
+import '../App.css'
 
 const Movies = () => {
   let baseUrl = `https://swapi.dev/api`
+  let heights = []
   const [isDropDown, setIsDropDown] = useState(false)
   const [dropDownClickedIndex, setDropDownClickedIndex] = useState('')
   const [filmsData, setFilmsData] = useState([])
   const [isFilmsLoading, setIsFilmsLoading] = useState(true)
+  const [isTableDataLoading, setIsTableDataLoading] = useState(false)
   const [characterData, setCharacterData] = useState([])
+  const [characterDataDuplicate, setCharacterDataDuplicate] = useState([])
   const [isToggleSort, setIsToggleSort] = useState(false)
   const [isToggleGender, setIsToggleGender] = useState(false)
+  const [allHeights, setAllHeights] = useState({})
 
-  // HANDLE DROP DOWN TOGGLE
+  // HANDLE DROP DOWN TOGGLE AND GETTING THE CHARACTERS DATA SUCH AS THEIR NAMES, GENDER AND HEIGHTS
   const handleDropDown = async (index, characters) => {
     setDropDownClickedIndex(index)
     setIsDropDown(!isDropDown)
     if (isDropDown === false) {
+      setIsTableDataLoading(true)
       await Promise.all(
         characters.map((charactersUrl) => {
-          return axios.get(charactersUrl).then((character) => {
-            setCharacterData((characterData) => [
-              ...characterData,
-              character.data,
-            ])
-          })
+          return axios
+            .get(charactersUrl)
+            .then((character) => {
+              setCharacterData((characterData) => [
+                ...characterData,
+                character.data,
+              ])
+              setCharacterDataDuplicate((characterData) => [
+                ...characterData,
+                character.data,
+              ])
+
+              heights.push(Number(character.data.height))
+              handleGetAllCharactersHeights(heights)
+              setIsTableDataLoading(false)
+            })
+            .catch((error) => {
+              if (error.code === 'ERR_NETWORK') {
+                cogoToast.error('Kindly check your network connection')
+              } else {
+                cogoToast.error('Oops!Something went wrong')
+              }
+            })
         }),
       )
     } else {
@@ -40,12 +64,39 @@ const Movies = () => {
     }
   }
 
+  // ADDITION OF ALL CHARCATERS HEIGHTS
+  const handleGetAllCharactersHeights = (arr) => {
+    let heightSum = arr.reduce((accumulator, currentValue) => {
+      return accumulator + currentValue
+    }, 0)
+
+    // FOMULAR FOR CALCULATING FEET: cm * 0.0328
+    let heightFeet = Math.floor(heightSum * 0.0328)
+
+    // FOMULAR FOR CALCULATING INCHES: cm * 0.0328
+    let stepOneheightInch = heightSum / 2.54
+    let stepTwoheightInch = stepOneheightInch / 12
+    let heightInch = stepTwoheightInch.toFixed(2)
+
+    setAllHeights({
+      sum_in_cm: heightSum,
+      sum_in_ft: heightFeet,
+      sum_in_inch: heightInch,
+    })
+  }
+
   // GET ALL STARWAR FILMS
   const handleGetAllStarWarFilms = async () => {
     try {
       let response = await axios.get(`${baseUrl}/films`)
       let result = response.data.results
-      setFilmsData(result)
+      const sortedDate = result.sort((a, b) => {
+        return (
+          (moment(b.release_date).format() > moment(a.release_date).format()) -
+          (moment(b.release_date).format() < moment(a.release_date).format())
+        )
+      })
+      setFilmsData(sortedDate)
       setIsFilmsLoading(false)
     } catch (error) {
       if (error.code === 'ERR_NETWORK') {
@@ -57,28 +108,66 @@ const Movies = () => {
     }
   }
 
+  // SORT ALL CHARACTERS IN ASCENDING AND DESCENDING ORDER
   const handleSortCharacters = () => {
     setIsToggleSort(!isToggleSort)
     if (isToggleSort === true) {
-      const reverse = [...characterData].reverse()
+      const sortedData = [...characterDataDuplicate].sort()
+      setCharacterData(sortedData)
+      let sortedHeightData = []
+      sortedData.map((data) => {
+        sortedHeightData.push(Number(data.height))
+      })
 
-      setCharacterData(reverse)
-      console.log(reverse)
+      handleGetAllCharactersHeights(sortedHeightData)
     } else if (isToggleSort === false) {
-      const reverse = [...characterData].sort()
+      const reversedData = [...characterDataDuplicate].reverse()
+      setCharacterData(reversedData)
 
-      setCharacterData(reverse)
-      console.log(reverse)
+      let reversedHeightData = []
+      reversedData.map((data) => {
+        reversedHeightData.push(Number(data.height))
+      })
+
+      handleGetAllCharactersHeights(reversedHeightData)
     } else {
       return null
     }
   }
 
-  const handleCharactersGender = () => {}
+  // FILTER ALL CHARACTERS BASED ON THEIR GENDERS(MALE AND FEMALE)
+  const handleCharactersGender = (gender) => {
+    setIsToggleGender(false)
+    if (gender === 'm') {
+      let maleData = characterDataDuplicate.filter((data) => {
+        return data.gender === 'male'
+      })
+
+      setCharacterData(maleData)
+      let maleHeightData = []
+      maleData.map((data) => {
+        maleHeightData.push(Number(data.height))
+      })
+
+      handleGetAllCharactersHeights(maleHeightData)
+    } else if (gender === 'f') {
+      let femaleData = characterDataDuplicate.filter((data) => {
+        return data.gender === 'female'
+      })
+
+      setCharacterData(femaleData)
+      let femaleHeightData = []
+      femaleData.map((data) => {
+        femaleHeightData.push(Number(data.height))
+      })
+
+      handleGetAllCharactersHeights(femaleHeightData)
+    }
+  }
 
   useEffect(() => {
     handleGetAllStarWarFilms()
-  }, [])
+  }, [heights])
 
   return (
     <div>
@@ -91,7 +180,7 @@ const Movies = () => {
           </p>
           {isFilmsLoading ? (
             <div
-              className="w-[50%] h-[500px] mt-[5%] p-6 overflow-y-scroll"
+              className="w-full md:w-[50%] lg:w-[50%] h-full md:h-[500px] lg:h-[500px] mt-[5%] p-6 overflow-y-scroll"
               style={{ boxShadow: 'rgba(149, 157, 165, 0.2) 0px 8px 24px' }}
             >
               <Skeleton
@@ -130,53 +219,104 @@ const Movies = () => {
                           </div>
                         </div>
 
-                        <div className="mt-4">
-                          <table>
-                            <tr onClick={handleSortCharacters}>
-                              <th>
-                                <span className="cursor-pointer">
-                                  {isToggleSort ? (
-                                    <ArrowDownwardIcon />
-                                  ) : (
-                                    <ArrowUpwardIcon />
-                                  )}
-                                </span>
-                                Name
-                              </th>
-                              <th
-                                onClick={() =>
-                                  setIsToggleGender(!isToggleGender)
-                                }
-                              >
-                                <span>
-                                  {isToggleGender ? (
-                                    <ExpandLessIcon />
-                                  ) : (
-                                    <ExpandMoreIcon />
-                                  )}
-                                  <ExpandMoreIcon />
-                                </span>
-                                Gender
-                              </th>
-                              <th>Height</th>
-                            </tr>
+                        <div className="overflow-scroll mt-4">
+                          {isTableDataLoading ? (
+                            <div className="w-full h-[500px] mt-[5%] p-6 overflow-y-scroll">
+                              <Skeleton
+                                count={8}
+                                className="w-full h-[40px] bg-[#FDF8F0] rounded-[2px] flex items-center p-3 cursor-pointer text-[#E8AA42] text-base  justify-between font-[400px] mt-2"
+                              />
+                            </div>
+                          ) : (
+                            <table>
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <span
+                                      className="cursor-pointer"
+                                      onClick={handleSortCharacters}
+                                    >
+                                      {isToggleSort ? (
+                                        <ArrowDownwardIcon />
+                                      ) : (
+                                        <ArrowUpwardIcon />
+                                      )}
+                                    </span>
+                                    Name
+                                  </th>
+                                  <th
+                                    onClick={() =>
+                                      setIsToggleGender(!isToggleGender)
+                                    }
+                                    className="cursor-pointer relative"
+                                  >
+                                    Gender
+                                    <span>
+                                      {isToggleGender ? (
+                                        <ExpandLessIcon />
+                                      ) : (
+                                        <ExpandMoreIcon />
+                                      )}
+                                    </span>
+                                    {isToggleGender && (
+                                      <div className="absolute p-2 w-[80px] bg-white">
+                                        <div className="">
+                                          <p
+                                            className="hover:bg-black hover:text-white p-1"
+                                            onClick={() => {
+                                              handleCharactersGender('m')
+                                            }}
+                                          >
+                                            m
+                                          </p>
+                                          <p
+                                            className="hover:bg-black hover:text-white p-1"
+                                            onClick={() => {
+                                              handleCharactersGender('f')
+                                            }}
+                                          >
+                                            f
+                                          </p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </th>
 
-                            {characterData.map((data, index) => {
-                              return (
-                                <tr key={index}>
-                                  <td>{data.name}</td>
-                                  <td>
-                                    {data.gender === 'male'
-                                      ? 'm'
-                                      : data.gender === 'female'
-                                      ? 'f'
-                                      : 'n/a'}
-                                  </td>
-                                  <td>{data.height + 'cm'}</td>
+                                  <th>Height</th>
                                 </tr>
-                              )
-                            })}
-                          </table>
+                              </thead>
+
+                              {characterData.map((data, index) => {
+                                return (
+                                  <tbody key={index}>
+                                    <tr>
+                                      <td>{data.name}</td>
+                                      <td>
+                                        {data.gender === 'male'
+                                          ? 'm'
+                                          : data.gender === 'female'
+                                          ? 'f'
+                                          : 'n/a'}
+                                      </td>
+                                      <td>{data.height + 'cm'}</td>
+                                    </tr>
+                                  </tbody>
+                                )
+                              })}
+                              <tfoot>
+                                <tr>
+                                  <td>
+                                    Total Characters:{characterData.length}
+                                  </td>
+                                  <td>
+                                    Total heights:
+                                    {`${allHeights.sum_in_cm}cm  (${allHeights.sum_in_ft}ft/${allHeights.sum_in_inch}in)`}
+                                  </td>
+                                  <td></td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          )}
                         </div>
                       </div>
                     )}

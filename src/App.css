@@ -1,0 +1,42 @@
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #fff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #fff;
+}
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td,
+th,
+thead,
+tbody,
+tfoot {
+  text-align: left;
+  padding: 15px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+
+tbody:nth-child(even) {
+  background-color: #dddddd;
+}
+
+tfoot:nth-child(even) {
+  background-color: #dddddd;
+}
