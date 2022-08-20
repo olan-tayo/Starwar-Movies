@@ -10,6 +10,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import moment from 'moment'
+import Marquee from 'react-fast-marquee'
 import '../App.css'
 
 const Movies = () => {
@@ -207,15 +208,15 @@ const Movies = () => {
                     {isDropDown && dropDownClickedIndex === index && (
                       <div>
                         <div className="mt-3 bg-[#E8AA42] text-black text-base p-2 tracking-wide">
-                          <div className="h-[150px] p-2">
-                            <marquee
-                              width="100%"
-                              direction="up"
-                              height="100%"
-                              scrollamount="4"
+                          <div className=" p-2">
+                            <Marquee
+                              speed="50"
+                              gradient="false"
+                              pauseOnHover="true"
+                              gradientColor="none"
                             >
                               {filmData.opening_crawl}
-                            </marquee>
+                            </Marquee>
                           </div>
                         </div>
 
