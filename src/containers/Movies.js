@@ -116,7 +116,7 @@ const Movies = () => {
       setCharacterData(sortedData)
       let sortedHeightData = []
       sortedData.map((data) => {
-        sortedHeightData.push(Number(data.height))
+        return sortedHeightData.push(Number(data.height))
       })
 
       handleGetAllCharactersHeights(sortedHeightData)
@@ -126,7 +126,7 @@ const Movies = () => {
 
       let reversedHeightData = []
       reversedData.map((data) => {
-        reversedHeightData.push(Number(data.height))
+        return reversedHeightData.push(Number(data.height))
       })
 
       handleGetAllCharactersHeights(reversedHeightData)
@@ -146,7 +146,7 @@ const Movies = () => {
       setCharacterData(maleData)
       let maleHeightData = []
       maleData.map((data) => {
-        maleHeightData.push(Number(data.height))
+        return maleHeightData.push(Number(data.height))
       })
 
       handleGetAllCharactersHeights(maleHeightData)
@@ -158,7 +158,7 @@ const Movies = () => {
       setCharacterData(femaleData)
       let femaleHeightData = []
       femaleData.map((data) => {
-        femaleHeightData.push(Number(data.height))
+        return femaleHeightData.push(Number(data.height))
       })
 
       handleGetAllCharactersHeights(femaleHeightData)
@@ -167,7 +167,7 @@ const Movies = () => {
 
   useEffect(() => {
     handleGetAllStarWarFilms()
-  }, [heights])
+  }, [])
 
   return (
     <div>
